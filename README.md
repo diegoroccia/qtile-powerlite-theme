@@ -4,6 +4,8 @@ This is a Qtile configuration with a Powerline look and feel for the panel
 
 ![Screenshot](qtile-powerlite-screenshot1.png)
 
+It uses a Gruvbox colorscheme but I plan to make it configurable
+
 ## Why?
 
 * Powerline can be heavy at times
