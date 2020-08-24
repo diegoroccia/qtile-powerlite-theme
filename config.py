@@ -321,7 +321,7 @@ border = dict(
     border_width=3, margin=10, single_margin=100, border_focus=Colors.neutral_aqua
 )
 
-layouts = [layout.MonadTall(**border), layout.Max()]
+layouts = [layout.MonadTall(**border)]
 
 main = None
 follow_mouse_focus = False
