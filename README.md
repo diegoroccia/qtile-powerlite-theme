@@ -20,6 +20,9 @@ It uses a Gruvbox colorscheme but I plan to make it configurable
   * Roboto Mono
   * Source Code Pro
   * NovaMono
+* i3lock (I am using a modified version of the wrapper script i3lock-fancy)
+* picom
+* nitrogen (but you can also set the wallpaper in the conf)
 
 ## TODO
 
