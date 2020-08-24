@@ -66,6 +66,8 @@ class Colors:
     faded_orange = "#af3a03"
 
 
+accent_left = Colors.light2
+accent_right = Colors.bright_orange
 # font = "monofur for Powerline"
 # font = "Roboto Mono for Powerline"
 # font = "Source Code Pro for Powerline"
@@ -84,14 +86,14 @@ screens = [
             [
                 widget.TextBox(
                     text=" " + socket.gethostname(),
-                    background=Colors.faded_aqua,
+                    background=accent_left,
                     foreground="#000000",
                     fontsize=panel_font_size,
                     **widget_defaults
                 ),
                 widget.TextBox(
                     text=u"\ue0b0 ",
-                    foreground=Colors.faded_aqua,
+                    foreground=accent_left,
                     background=Colors.dark1,
                     fontsize=panel_height,
                     **widget_defaults
@@ -103,7 +105,7 @@ screens = [
                     background=Colors.dark1,
                     highlight_method="line",
                     highlight_color=Colors.dark1,
-                    this_current_screen_border=Colors.faded_aqua,
+                    this_current_screen_border=accent_left,
                     borderwidth=3,
                 ),
                 widget.TextBox(
@@ -172,20 +174,20 @@ screens = [
                 ),
                 widget.TextBox(
                     text=u" \ue0b2",
-                    foreground=Colors.bright_orange,
+                    foreground=accent_right,
                     background=Colors.dark4,
                     fontsize=panel_height,
                     **widget_defaults
                 ),
                 widget.Clock(
                     foreground="#000000",
-                    background=Colors.bright_orange,
+                    background=accent_right,
                     fontsize=panel_font_size,
                     format="%Y-%m-%d %H:%M",
                 ),
                 widget.TextBox(
                     text=u" ",
-                    background=Colors.bright_orange,
+                    background=accent_right,
                     fontsize=panel_height,
                     **widget_defaults
                 ),
@@ -337,9 +339,7 @@ for counter, i in enumerate(groupNames, 1):
     keys.append(Key([mod], str(counter), lazy.group[i].toscreen()))
     keys.append(Key([mod, "shift"], str(counter), lazy.window.togroup(i)))
 
-border = dict(
-    border_width=3, margin=10, single_margin=100, border_focus=Colors.neutral_aqua
-)
+border = dict(border_width=3, margin=10, single_margin=100, border_focus=accent_left)
 
 layouts = [layout.MonadTall(**border)]
 
@@ -358,7 +358,7 @@ def startup():
     subprocess.Popen(["nitrogen", "--restore"])
     subprocess.Popen(["unclutter", "--root"])
     subprocess.Popen(["nm-applet"])
-    subprocess.Popen(["xautolock","-time"," 5","-locker","screenlock"])
+    subprocess.Popen(["xautolock", "-time", " 5", "-locker", "screenlock"])
 
 
 wmname = "LG3D"
