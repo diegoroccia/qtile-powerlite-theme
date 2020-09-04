@@ -22,6 +22,7 @@ from libqtile.config import Key, Screen, Group, Drag, Click
 from libqtile.command import lazy
 from libqtile import layout, bar, widget, hook
 import socket
+import yaml
 
 
 class Colors:
@@ -66,40 +67,31 @@ class Colors:
     faded_orange = "#af3a03"
 
 
-accent_left = Colors.light2
+accent_left = Colors.bright_blue
 accent_right = Colors.bright_orange
-# font = "monofur for Powerline"
-# font = "Roboto Mono for Powerline"
-# font = "Source Code Pro for Powerline"
 font = "NovaMono for Powerline"
 
 panel_height = 40
 panel_font_size = 20
 
-widget_defaults = dict(font=font, padding=0)
+widget_defaults = dict(font=font, padding=0, fontsize=panel_font_size)
 
 screens = [
     Screen(
-        # wallpaper="/home/droccia/Pictures/backgrounds/15290.jpg",
-        # wallpaper_mode="fill",
         top=bar.Bar(
             [
                 widget.TextBox(
                     text=" " + socket.gethostname(),
                     background=accent_left,
                     foreground="#000000",
-                    fontsize=panel_font_size,
-                    **widget_defaults
                 ),
                 widget.TextBox(
                     text=u"\ue0b0 ",
                     foreground=accent_left,
                     background=Colors.dark1,
                     fontsize=panel_height,
-                    **widget_defaults
                 ),
                 widget.GroupBox(
-                    fontsize=panel_font_size,
                     rounded=False,
                     inactive=Colors.dark4,
                     background=Colors.dark1,
@@ -107,44 +99,23 @@ screens = [
                     highlight_color=Colors.dark1,
                     this_current_screen_border=accent_left,
                     borderwidth=3,
+                    font="Font Awesome 5 Free,Font Awesome 5 Free Solid:style=Solid",
                 ),
                 widget.TextBox(
-                    text=u"\ue0b0 ",
-                    foreground=Colors.dark1,
-                    fontsize=panel_height,
-                    **widget_defaults
+                    text=u"\ue0b0 ", foreground=Colors.dark1, fontsize=panel_height
                 ),
-                widget.WindowName(
-                    foreground="a0a0a0", fontsize=panel_font_size, **widget_defaults
-                ),
-                # widget.TaskList(foreground="a0a0a0", fontsize=panel_font_size, **widget_defaults),
-                # widget.TextBox(
-                #    text=u"\ue0b3 ",
-                #    foreground="#585858",
-                #    fontsize=panel_height,
-                #    **widget_defaults
-                # ),
-                # widget.Notify(fontsize=panel_font_size),
+                widget.WindowName(foreground="a0a0a0"),
                 widget.TextBox(
-                    text=u" \ue0b2",
-                    foreground=Colors.dark1,
-                    fontsize=panel_height,
-                    **widget_defaults
+                    text=u" \ue0b2", foreground=Colors.dark1, fontsize=panel_height
                 ),
-                widget.Systray(icon_size=24, background=Colors.dark1),
-                widget.Volume(
-                    borderwidth=0,
-                    fontsize=panel_font_size,
-                    background=Colors.dark1,
-                    emoji=True,
-                    **widget_defaults
-                ),
+                widget.Systray(icon_size=24, background=Colors.dark1, padding=5),
+                widget.Sep(padding=5, linewidth=0, background=Colors.dark1),
+                widget.Volume(borderwidth=0, background=Colors.dark1, emoji=True),
                 widget.TextBox(
                     text=u" \ue0b2",
                     foreground=Colors.dark2,
                     background=Colors.dark1,
                     fontsize=panel_height,
-                    **widget_defaults
                 ),
                 widget.Battery(
                     energy_now_file="charge_now",
@@ -153,43 +124,36 @@ screens = [
                     update_delay=5,
                     background=Colors.dark2,
                     borderwidth=0,
-                    fontsize=panel_font_size,
-                    **widget_defaults
                 ),
                 widget.TextBox(
                     text=u" \ue0b2",
                     foreground=Colors.dark4,
                     background=Colors.dark2,
                     fontsize=panel_height,
-                    **widget_defaults
                 ),
                 widget.GenPollUrl(
                     url="http://wttr.in?format=1",
                     parse=lambda x: x.strip("\n"),
                     json=False,
-                    fontsize=panel_font_size,
                     foreground="#000000",
                     background=Colors.dark4,
-                    **widget_defaults
                 ),
                 widget.TextBox(
                     text=u" \ue0b2",
                     foreground=accent_right,
                     background=Colors.dark4,
                     fontsize=panel_height,
-                    **widget_defaults
                 ),
                 widget.Clock(
                     foreground="#000000",
                     background=accent_right,
-                    fontsize=panel_font_size,
                     format="%Y-%m-%d %H:%M",
                 ),
                 widget.TextBox(
-                    text=u" ",
+                    text=u" \ue0b2",
+                    foreground=Colors.bright_red,
                     background=accent_right,
                     fontsize=panel_height,
-                    **widget_defaults
                 ),
             ],
             size=panel_height,
@@ -206,43 +170,26 @@ def dialogs(window):
         window.floating = True
 
 
-# Super_L (the Windows key) is typically bound to mod4 by default, so we use
-# that here.
 mod = "mod4"
 alt = "mod1"
 
 keys = [
-    # Log out; note that this doesn't use mod4: that's intentional in case mod4
-    # gets hosed (which happens if you unplug and replug your usb keyboard
-    # sometimes, or on system upgrades). This way you can still log back out
-    # and in gracefully.
     Key([mod, "shift"], "q", lazy.shutdown()),
     Key([mod, "shift"], "r", lazy.restart()),
     Key([mod], "c", lazy.window.kill()),
     Key([mod, "shift"], "m", lazy.group.setlayout("max")),
     Key([mod], "x", lazy.group.setlayout("monadtall")),
-    # Key([mod], "m",
-    #     lazy.window.toggle_maximize()),
+    Key([mod], "m", lazy.window.toggle_maximize()),
     Key(
         [mod, "shift"], "Tab", lazy.group.prev_window(), lazy.window.disable_floating()
     ),
-    # Bindings to control the layouts
-    # Key([mod], "h",
-    #     lazy.group.prev_window()),
-    # Key([mod], "l",
-    #     lazy.group.next_window()),
-    # Key([mod], "f",
-    #     lazy.window.toggle_floating()),
     Key([mod], "f", lazy.window.toggle_fullscreen()),
     Key([mod, alt], "j", lazy.window.opacity(0.5)),
     Key([mod, alt], "k", lazy.window.opacity(1.0)),
-    # Key([mod, alt], "k",
-    #     lazy.window.up_opacity()),
     Key([mod], "h", lazy.layout.previous(), lazy.layout.left()),  # Stack  # xmonad-tall
     Key([mod], "l", lazy.layout.next(), lazy.layout.right()),  # Stack  # xmonad-tall
     Key([mod], "k", lazy.layout.up()),
     Key([mod], "j", lazy.layout.down()),
-    # These are unique to stack layout
     Key(
         [mod, "shift"],
         "l",
@@ -310,7 +257,6 @@ keys = [
     Key([mod], "minus", lazy.spawn("amixer -c 0 -q set Master 2dB-")),
 ]
 
-# This allows you to drag windows around with the mouse if you want.
 mouse = [
     Drag(
         [mod],
@@ -324,22 +270,22 @@ mouse = [
     Click([mod], "Button2", lazy.window.bring_to_front()),
 ]
 
-groups = []
 
-groupNames = [
-    u"\U0001F4BB main",
-    u"\U0001F310 web",
-    u"\U0001F3AE games",
-    u"\U0001F3A7 media",
-]
+def get_groups():
+    groups = yaml.load(open("/home/droccia/.config/qtile/groups.yaml", "r"))
+    g = []
+    for counter, group in enumerate(groups["groups"], 1):
+        g.append(Group(group["name"], label=group["icon"]))
+        keys.append(Key([mod], str(counter), lazy.group[group["name"]].toscreen()))
+        keys.append(
+            Key([mod, "shift"], str(counter), lazy.window.togroup(group["name"]))
+        )
+    return g
 
 
-for counter, i in enumerate(groupNames, 1):
-    groups.append(Group(i))
-    keys.append(Key([mod], str(counter), lazy.group[i].toscreen()))
-    keys.append(Key([mod, "shift"], str(counter), lazy.window.togroup(i)))
+groups = get_groups()
 
-border = dict(border_width=3, margin=10, single_margin=100, border_focus=accent_left)
+border = dict(border_width=6, margin=10, single_margin=200, border_focus=accent_left)
 
 layouts = [layout.MonadTall(**border)]
 
