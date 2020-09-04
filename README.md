@@ -21,8 +21,9 @@ It uses a Gruvbox colorscheme but I plan to make it configurable
   * Source Code Pro
   * NovaMono
 * i3lock (I am using a modified version of the wrapper script i3lock-fancy)
-* picom
-* nitrogen (but you can also set the wallpaper in the conf)
+* picom (optional)
+* nitrogen (but you can also set the wallpaper directly in the conf)
+* fontawesome fonts (for the group icons)
 
 ## TODO
 
