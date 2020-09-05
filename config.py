@@ -318,13 +318,13 @@ def startup():
 
     subprocess.Popen(["picom"])
     subprocess.Popen(["systemctl", "--user", "import-environment", "DISPLAY"])
-    subprocess.Popen(["dex", "-a", "-s", "/home/droccia/.config/autostart/"])
     # subprocess.Popen(["xsettingsd"])
     subprocess.Popen(["nitrogen", "--restore"])
     subprocess.Popen(["unclutter", "--root"])
     subprocess.Popen(["nm-applet"])
     subprocess.Popen(["xautolock", "-time", " 5", "-locker", "screenlock"])
     # subprocess.Popen(["xdg-autostart"])
+    subprocess.Popen(["dex", "-a", "-s", "/home/droccia/.config/autostart/"])
 
 
 wmname = "LG3D"
