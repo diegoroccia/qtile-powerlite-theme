@@ -323,7 +323,6 @@ def startup():
     subprocess.Popen(["unclutter", "--root"])
     subprocess.Popen(["nm-applet"])
     subprocess.Popen(["xautolock", "-time", " 5", "-locker", "screenlock"])
-    # subprocess.Popen(["xdg-autostart"])
     subprocess.Popen(["dex", "-a", "-s", "/home/droccia/.config/autostart/"])
 
 
