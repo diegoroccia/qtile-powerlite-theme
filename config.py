@@ -76,6 +76,35 @@ panel_font_size = 18
 
 widget_defaults = dict(font=font, padding=0, fontsize=panel_font_size, borderwidth=0)
 
+# this import requires python-xlib to be installed
+from Xlib import display as xdisplay
+
+
+def get_num_monitors():
+    num_monitors = 0
+    try:
+        display = xdisplay.Display()
+        screen = display.screen()
+        resources = screen.root.xrandr_get_screen_resources()
+
+        for output in resources.outputs:
+            monitor = display.xrandr_get_output_info(output, resources.config_timestamp)
+            preferred = False
+            if hasattr(monitor, "preferred"):
+                preferred = monitor.preferred
+            elif hasattr(monitor, "num_preferred"):
+                preferred = monitor.num_preferred
+            if preferred:
+                num_monitors += 1
+    except Exception as e:
+        # always setup at least one monitor
+        return 1
+    else:
+        return num_monitors
+
+
+num_monitors = get_num_monitors()
+
 
 def powerline_arrow(direction, color1, color2):
     if direction == "r":
@@ -100,73 +129,102 @@ def powerline_arrow(direction, color1, color2):
         ]
 
 
-screens = [
-    Screen(
-        top=bar.Bar(
-            [
-                widget.TextBox(
-                    text=" " + socket.gethostname(),
-                    background=accent_left,
-                    foreground="#000000",
-                ),
-                *powerline_arrow("r", accent_left, Colors.dark1),
-                widget.GroupBox(
-                    rounded=False,
-                    inactive=Colors.dark4,
-                    background=Colors.dark1,
-                    highlight_method="line",
-                    highlight_color=Colors.dark1,
-                    this_current_screen_border=accent_left,
-                    borderwidth=4,
-                    font="Font Awesome 5 Free,Font Awesome 5 Free Solid:style=Solid",
-                ),
-                *powerline_arrow("r", Colors.dark1, None),
-                widget.WindowName(foreground="a0a0a0"),
-                *powerline_arrow("l", None, Colors.dark1),
-                widget.Systray(icon_size=24, background=Colors.dark1, padding=5),
-                widget.Sep(padding=5, linewidth=0, background=Colors.dark1),
-                widget.Volume(borderwidth=0, background=Colors.dark1, emoji=True),
-                *powerline_arrow("l", Colors.dark1, Colors.dark2),
-                widget.Battery(
-                    energy_now_file="charge_now",
-                    energy_full_file="charge_full",
-                    power_now_file="current_now",
-                    update_delay=5,
-                    background=Colors.dark2,
-                    borderwidth=0,
-                ),
-                *powerline_arrow("l", Colors.dark2, Colors.dark4),
-                widget.GenPollUrl(
-                    url="http://wttr.in?format=1",
-                    parse=lambda x: x.strip("\n"),
-                    json=False,
-                    foreground="#000000",
-                    background=Colors.dark4,
-                ),
-                *powerline_arrow("l", Colors.dark4, accent_right),
-                widget.Clock(
-                    foreground="#000000",
-                    background=accent_right,
-                    format="%Y-%m-%d %H:%M",
-                ),
-                widget.TextBox(
-                    text=u" \ue0b2",
-                    foreground=Colors.bright_red,
-                    background=accent_right,
-                    fontsize=panel_height,
-                ),
-            ],
-            size=panel_height,
-            background=Colors.dark0_hard,
-            opacity=0.9,
-        )
+def get_panel(monitor_id):
+    widgets = [
+        widget.TextBox(
+            text=" " + socket.gethostname(),
+            background=accent_left,
+            foreground="#000000",
+        ),
+        *powerline_arrow("r", accent_left, Colors.dark1),
+        widget.GroupBox(
+            rounded=False,
+            inactive=Colors.dark4,
+            background=Colors.dark1,
+            highlight_method="line",
+            highlight_color=Colors.dark1,
+            this_current_screen_border=accent_left,
+            borderwidth=4,
+            font="Font Awesome 5 Free,Font Awesome 5 Free Solid:style=Solid",
+        ),
+        *powerline_arrow("r", Colors.dark1, None),
+        widget.WindowName(foreground="a0a0a0"),
+        *powerline_arrow("l", None, Colors.dark1),
+    ]
+
+    if monitor_id == 0:
+        widgets.append(widget.Systray(icon_size=24, background=Colors.dark1, padding=5))
+
+    widgets.extend(
+        [
+            widget.Sep(padding=5, linewidth=0, background=Colors.dark1),
+            widget.Volume(borderwidth=0, background=Colors.dark1, emoji=True),
+            *powerline_arrow("l", Colors.dark1, Colors.dark2),
+            widget.Battery(
+                energy_now_file="charge_now",
+                energy_full_file="charge_full",
+                power_now_file="current_now",
+                update_delay=5,
+                background=Colors.dark2,
+                borderwidth=0,
+            ),
+            *powerline_arrow("l", Colors.dark2, Colors.dark4),
+            widget.GenPollUrl(
+                url="http://wttr.in?format=1",
+                parse=lambda x: x.strip("\n"),
+                json=False,
+                foreground="#000000",
+                background=Colors.dark4,
+            ),
+            *powerline_arrow("l", Colors.dark4, accent_right),
+            widget.Clock(
+                foreground="#000000", background=accent_right, format="%Y-%m-%d %H:%M"
+            ),
+            widget.TextBox(
+                text=u" \ue0b2",
+                foreground=Colors.bright_red,
+                background=accent_right,
+                fontsize=panel_height,
+            ),
+        ]
     )
-]
+
+    return bar.Bar(
+        widgets, size=panel_height, background=Colors.dark0_hard, opacity=0.9
+    )
+
+
+screens = []
+
+for m in range(num_monitors):
+    screens.append(Screen(top=get_panel(m)))
 
 
 @hook.subscribe.client_new
 def dialogs(window):
     if window.window.get_wm_type() == "dialog" or window.window.get_wm_transient_for():
+        window.floating = True
+
+
+@hook.subscribe.client_new
+def float_steam(window):
+    wm_class = window.window.get_wm_class()
+    w_name = window.window.get_name()
+    if wm_class == ("Steam", "Steam") and (
+        w_name != "Steam"
+        # w_name == "Friends List"
+        # or w_name == "Screenshot Uploader"
+        # or w_name.startswith("Steam - News")
+        or "PMaxSize" in window.window.get_wm_normal_hints().get("flags", ())
+    ):
+        window.floating = True
+
+
+@hook.subscribe.client_new
+def float_firefox(window):
+    wm_class = window.window.get_wm_class()
+    w_name = window.window.get_name()
+    if wm_class == ("Places", "firefox") and w_name == "Library":
         window.floating = True
 
 
@@ -309,6 +367,30 @@ layouts = [layout.MonadTall(**border)]
 
 main = None
 follow_mouse_focus = False
+bring_front_click = False
+cursor_warp = False
+floating_layout = layout.Floating(
+    float_rules=[
+        {"wmclass": "confirm"},
+        {"wmclass": "dialog"},
+        {"wmclass": "download"},
+        {"wmclass": "error"},
+        {"wmclass": "file_progress"},
+        {"wmclass": "notification"},
+        {"wmclass": "splash"},
+        {"wmclass": "toolbar"},
+        {"wmclass": "confirmreset"},  # gitk
+        {"wmclass": "makebranch"},  # gitk
+        {"wmclass": "maketag"},  # gitk
+        {"wname": "branchdialog"},  # gitk
+        {"wname": "pinentry"},  # GPG key password entry
+        {"wmclass": "ssh-askpass"},  # ssh-askpass
+    ]
+)
+auto_fullscreen = True
+focus_on_window_activation = "smart"
+
+wmname = "LG3D"
 
 
 @hook.subscribe.startup_once
@@ -324,6 +406,3 @@ def startup():
     subprocess.Popen(["nm-applet"])
     subprocess.Popen(["xautolock", "-time", " 5", "-locker", "screenlock"])
     subprocess.Popen(["dex", "-a", "-s", "/home/droccia/.config/autostart/"])
-
-
-wmname = "LG3D"
