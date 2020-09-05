@@ -72,9 +72,33 @@ accent_right = Colors.bright_orange
 font = "NovaMono for Powerline"
 
 panel_height = 40
-panel_font_size = 20
+panel_font_size = 18
 
-widget_defaults = dict(font=font, padding=0, fontsize=panel_font_size)
+widget_defaults = dict(font=font, padding=0, fontsize=panel_font_size, borderwidth=0)
+
+
+def powerline_arrow(direction, color1, color2):
+    if direction == "r":
+        return [
+            widget.TextBox(
+                text=u"\ue0b0",
+                foreground=color1,
+                background=color2,
+                fontsize=panel_height,
+            ),
+            widget.Sep(padding=5, linewidth=0, background=color2),
+        ]
+    else:
+        return [
+            widget.Sep(padding=14, linewidth=0, background=color1),
+            widget.TextBox(
+                text=u"\ue0b2",
+                foreground=color2,
+                background=color1,
+                fontsize=panel_height,
+            ),
+        ]
+
 
 screens = [
     Screen(
@@ -85,12 +109,7 @@ screens = [
                     background=accent_left,
                     foreground="#000000",
                 ),
-                widget.TextBox(
-                    text=u"\ue0b0 ",
-                    foreground=accent_left,
-                    background=Colors.dark1,
-                    fontsize=panel_height,
-                ),
+                *powerline_arrow("r", accent_left, Colors.dark1),
                 widget.GroupBox(
                     rounded=False,
                     inactive=Colors.dark4,
@@ -98,25 +117,16 @@ screens = [
                     highlight_method="line",
                     highlight_color=Colors.dark1,
                     this_current_screen_border=accent_left,
-                    borderwidth=3,
+                    borderwidth=4,
                     font="Font Awesome 5 Free,Font Awesome 5 Free Solid:style=Solid",
                 ),
-                widget.TextBox(
-                    text=u"\ue0b0 ", foreground=Colors.dark1, fontsize=panel_height
-                ),
+                *powerline_arrow("r", Colors.dark1, None),
                 widget.WindowName(foreground="a0a0a0"),
-                widget.TextBox(
-                    text=u" \ue0b2", foreground=Colors.dark1, fontsize=panel_height
-                ),
+                *powerline_arrow("l", None, Colors.dark1),
                 widget.Systray(icon_size=24, background=Colors.dark1, padding=5),
                 widget.Sep(padding=5, linewidth=0, background=Colors.dark1),
                 widget.Volume(borderwidth=0, background=Colors.dark1, emoji=True),
-                widget.TextBox(
-                    text=u" \ue0b2",
-                    foreground=Colors.dark2,
-                    background=Colors.dark1,
-                    fontsize=panel_height,
-                ),
+                *powerline_arrow("l", Colors.dark1, Colors.dark2),
                 widget.Battery(
                     energy_now_file="charge_now",
                     energy_full_file="charge_full",
@@ -125,12 +135,7 @@ screens = [
                     background=Colors.dark2,
                     borderwidth=0,
                 ),
-                widget.TextBox(
-                    text=u" \ue0b2",
-                    foreground=Colors.dark4,
-                    background=Colors.dark2,
-                    fontsize=panel_height,
-                ),
+                *powerline_arrow("l", Colors.dark2, Colors.dark4),
                 widget.GenPollUrl(
                     url="http://wttr.in?format=1",
                     parse=lambda x: x.strip("\n"),
@@ -138,12 +143,7 @@ screens = [
                     foreground="#000000",
                     background=Colors.dark4,
                 ),
-                widget.TextBox(
-                    text=u" \ue0b2",
-                    foreground=accent_right,
-                    background=Colors.dark4,
-                    fontsize=panel_height,
-                ),
+                *powerline_arrow("l", Colors.dark4, accent_right),
                 widget.Clock(
                     foreground="#000000",
                     background=accent_right,
@@ -175,11 +175,10 @@ alt = "mod1"
 
 keys = [
     Key([mod, "shift"], "q", lazy.shutdown()),
+    Key([], "XF86PowerOff", lazy.shutdown()),
     Key([mod, "shift"], "r", lazy.restart()),
     Key([mod], "c", lazy.window.kill()),
-    Key([mod, "shift"], "m", lazy.group.setlayout("max")),
-    Key([mod], "x", lazy.group.setlayout("monadtall")),
-    Key([mod], "m", lazy.window.toggle_maximize()),
+    Key([mod], "n", lazy.window.toggle_minimize()),
     Key(
         [mod, "shift"], "Tab", lazy.group.prev_window(), lazy.window.disable_floating()
     ),
@@ -203,13 +202,13 @@ keys = [
         lazy.layout.swap_left(),
     ),  # xmonad-tall
     Key([mod, "shift"], "Return", lazy.layout.toggle_split()),
+    Key([mod, "control"], "Return", lazy.layout.swap_main()),
     # Multiple function keys
     Key(
         [mod, "shift"], "space", lazy.layout.rotate(), lazy.layout.flip()
     ),  # xmonad-tall
     Key([mod, "shift"], "k", lazy.layout.shuffle_up()),  # Stack, xmonad-tall
     Key([mod, "shift"], "j", lazy.layout.shuffle_down()),  # Stack, xmonad-tall
-    Key([mod], "m", lazy.layout.toggle_maximize()),  # Stack
     Key([mod, "control"], "m", lazy.layout.maximize()),  # xmonad-tall
     Key([mod, "control"], "n", lazy.layout.normalize()),  # xmonad-tall
     Key(
@@ -255,6 +254,25 @@ keys = [
     # Also allow changing volume the old fashioned way.
     Key([mod], "equal", lazy.spawn("amixer -c 0 -q set Master 2dB+")),
     Key([mod], "minus", lazy.spawn("amixer -c 0 -q set Master 2dB-")),
+    Key(
+        ["shift"],
+        "Print",
+        lazy.spawn(
+            """bash -c "maim -d 1 -s | xclip -selection clipboard -t image/png" """
+        ),
+    ),
+    Key(
+        [],
+        "Print",
+        lazy.spawn("""bash -c "maim | xclip -selection clipboard -t image/png" """),
+    ),
+    Key(
+        ["control"],
+        "Print",
+        lazy.spawn(
+            """bash -c "maim -B -i $(xdotool getactivewindow) | xclip -selection clipboard -t image/png" """
+        ),
+    ),
 ]
 
 mouse = [
@@ -293,18 +311,20 @@ main = None
 follow_mouse_focus = False
 
 
-@hook.subscribe.startup_complete
+@hook.subscribe.startup_once
 def startup():
 
     import subprocess
 
-    subprocess.Popen(["systemctl", "--user", "import-environment", "DISPLAY"])
-    subprocess.Popen(["xsettingsd"])
     subprocess.Popen(["picom"])
+    subprocess.Popen(["systemctl", "--user", "import-environment", "DISPLAY"])
+    subprocess.Popen(["dex", "-a", "-s", "/home/droccia/.config/autostart/"])
+    # subprocess.Popen(["xsettingsd"])
     subprocess.Popen(["nitrogen", "--restore"])
     subprocess.Popen(["unclutter", "--root"])
     subprocess.Popen(["nm-applet"])
     subprocess.Popen(["xautolock", "-time", " 5", "-locker", "screenlock"])
+    # subprocess.Popen(["xdg-autostart"])
 
 
 wmname = "LG3D"
