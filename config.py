@@ -200,6 +200,11 @@ for m in range(num_monitors):
     screens.append(Screen(top=get_panel(m)))
 
 
+@hook.subscribe.screen_change
+def restart_on_randr(ev):
+    libqtile.qtile.cmd_restart()
+
+
 @hook.subscribe.client_new
 def dialogs(window):
     if window.window.get_wm_type() == "dialog" or window.window.get_wm_transient_for():
@@ -226,6 +231,15 @@ def float_firefox(window):
     w_name = window.window.get_name()
     if wm_class == ("Places", "firefox") and w_name == "Library":
         window.floating = True
+
+
+@lazy.function
+def float_to_front(qtile):
+    logging.info("bring floating windows to front")
+    for group in qtile.groups:
+        for window in group.windows:
+            if window.floating:
+                window.cmd_bring_to_front()
 
 
 mod = "mod4"
@@ -297,8 +311,8 @@ keys = [
     ),  # Tile
     Key([mod], "Tab", lazy.nextlayout()),
     # interact with prompts
-    Key([mod], "r", lazy.spawncmd()),
-    Key([mod], "g", lazy.switchgroup()),
+    Key(["mod4", "shift"], "f", float_to_front),
+    Key([mod], "period", lazy.next_screen(), desc="Move focus to next monitor"),
     # start specific apps
     Key([mod], "q", lazy.spawn("firefox")),
     Key([mod], "Return", lazy.spawn("st")),
