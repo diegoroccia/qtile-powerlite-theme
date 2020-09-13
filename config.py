@@ -17,12 +17,22 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-from libqtile.config import Key, Screen, Group, Drag, Click
-from libqtile.command import lazy
-from libqtile import layout, bar, widget, hook
 import socket
+
 import yaml
+from libqtile import bar
+from libqtile import hook
+from libqtile import layout
+from libqtile import widget
+from libqtile.command import lazy
+from libqtile.config import Click
+from libqtile.config import Drag
+from libqtile.config import DropDown
+from libqtile.config import Group
+from libqtile.config import Key
+from libqtile.config import ScratchPad
+from libqtile.config import Screen
+from Xlib import display as xdisplay
 
 
 class Colors:
@@ -74,10 +84,11 @@ font = "NovaMono for Powerline"
 panel_height = 40
 panel_font_size = 18
 
-widget_defaults = dict(font=font, padding=0, fontsize=panel_font_size, borderwidth=0)
+widget_defaults = dict(
+    font=font, padding=0, fontsize=panel_font_size, borderwidth=0
+)
 
 # this import requires python-xlib to be installed
-from Xlib import display as xdisplay
 
 
 def get_num_monitors():
@@ -88,7 +99,9 @@ def get_num_monitors():
         resources = screen.root.xrandr_get_screen_resources()
 
         for output in resources.outputs:
-            monitor = display.xrandr_get_output_info(output, resources.config_timestamp)
+            monitor = display.xrandr_get_output_info(
+                output, resources.config_timestamp
+            )
             preferred = False
             if hasattr(monitor, "preferred"):
                 preferred = monitor.preferred
@@ -96,7 +109,7 @@ def get_num_monitors():
                 preferred = monitor.num_preferred
             if preferred:
                 num_monitors += 1
-    except Exception as e:
+    except Exception:
         # always setup at least one monitor
         return 1
     else:
@@ -153,7 +166,9 @@ def get_panel(monitor_id):
     ]
 
     if monitor_id == 0:
-        widgets.append(widget.Systray(icon_size=24, background=Colors.dark1, padding=5))
+        widgets.append(
+            widget.Systray(icon_size=24, background=Colors.dark1, padding=5)
+        )
 
     widgets.extend(
         [
@@ -178,7 +193,9 @@ def get_panel(monitor_id):
             ),
             *powerline_arrow("l", Colors.dark4, accent_right),
             widget.Clock(
-                foreground="#000000", background=accent_right, format="%Y-%m-%d %H:%M"
+                foreground="#000000",
+                background=accent_right,
+                format="%Y-%m-%d %H:%M",
             ),
             widget.TextBox(
                 text=u" \ue0b2",
@@ -200,14 +217,17 @@ for m in range(num_monitors):
     screens.append(Screen(top=get_panel(m)))
 
 
-@hook.subscribe.screen_change
-def restart_on_randr(ev):
-    libqtile.qtile.cmd_restart()
+# @hook.subscribe.screen_change
+# def restart_on_randr(ev):
+#    libqtile.qtile.cmd_restart()
 
 
 @hook.subscribe.client_new
 def dialogs(window):
-    if window.window.get_wm_type() == "dialog" or window.window.get_wm_transient_for():
+    if (
+        window.window.get_wm_type() == "dialog"
+        or window.window.get_wm_transient_for()
+    ):
         window.floating = True
 
 
@@ -235,7 +255,6 @@ def float_firefox(window):
 
 @lazy.function
 def float_to_front(qtile):
-    logging.info("bring floating windows to front")
     for group in qtile.groups:
         for window in group.windows:
             if window.floating:
@@ -252,13 +271,16 @@ keys = [
     Key([mod], "c", lazy.window.kill()),
     Key([mod], "n", lazy.window.toggle_minimize()),
     Key(
-        [mod, "shift"], "Tab", lazy.group.prev_window(), lazy.window.disable_floating()
+        [mod, "shift"],
+        "Tab",
+        lazy.group.prev_window(),
+        lazy.window.disable_floating(),
     ),
     Key([mod], "f", lazy.window.toggle_fullscreen()),
     Key([mod, alt], "j", lazy.window.opacity(0.5)),
     Key([mod, alt], "k", lazy.window.opacity(1.0)),
-    Key([mod], "h", lazy.layout.previous(), lazy.layout.left()),  # Stack  # xmonad-tall
-    Key([mod], "l", lazy.layout.next(), lazy.layout.right()),  # Stack  # xmonad-tall
+    Key([mod], "h", lazy.layout.left()),  # Stack  # xmonad-tall
+    Key([mod], "l", lazy.layout.right()),  # Stack  # xmonad-tall
     Key([mod], "k", lazy.layout.up()),
     Key([mod], "j", lazy.layout.down()),
     Key(
@@ -266,12 +288,14 @@ keys = [
         "l",
         lazy.layout.client_to_next(),  # Stack
         lazy.layout.swap_right(),
+        lazy.layout.shuffle_right(),
     ),  # xmonad-tall
     Key(
         [mod, "shift"],
         "h",
         lazy.layout.client_to_previous(),  # Stack
         lazy.layout.swap_left(),
+        lazy.layout.shuffle_left(),
     ),  # xmonad-tall
     Key([mod, "shift"], "Return", lazy.layout.toggle_split()),
     Key([mod, "control"], "Return", lazy.layout.swap_main()),
@@ -280,7 +304,9 @@ keys = [
         [mod, "shift"], "space", lazy.layout.rotate(), lazy.layout.flip()
     ),  # xmonad-tall
     Key([mod, "shift"], "k", lazy.layout.shuffle_up()),  # Stack, xmonad-tall
-    Key([mod, "shift"], "j", lazy.layout.shuffle_down()),  # Stack, xmonad-tall
+    Key(
+        [mod, "shift"], "j", lazy.layout.shuffle_down()
+    ),  # Stack, xmonad-tall
     Key([mod, "control"], "m", lazy.layout.maximize()),  # xmonad-tall
     Key([mod, "control"], "n", lazy.layout.normalize()),  # xmonad-tall
     Key(
@@ -288,7 +314,7 @@ keys = [
         "l",
         lazy.layout.delete(),  # Stack
         lazy.layout.increase_ratio(),  # Tile
-        lazy.layout.grow(),
+        lazy.layout.grow_right(),
     ),  # xmonad-tall
     Key(
         [mod, "control"],
@@ -296,31 +322,47 @@ keys = [
         lazy.layout.add(),  # Stack
         lazy.layout.decrease_ratio(),  # Tile
         lazy.layout.shrink(),
+        lazy.layout.grow_left(),
     ),  # xmonad-tall
     Key(
         [mod, "control"],
         "k",
         lazy.layout.grow(),  # xmonad-tall
         lazy.layout.decrease_nmaster(),
+        lazy.layout.grow_up(),
     ),  # Tile
     Key(
         [mod, "control"],
         "j",
         lazy.layout.shrink(),  # xmonad-tall
         lazy.layout.increase_nmaster(),
+        lazy.layout.grow_down(),
     ),  # Tile
-    Key([mod], "Tab", lazy.nextlayout()),
+    Key([mod], "Tab", lazy.next_layout()),
     # interact with prompts
     Key(["mod4", "shift"], "f", float_to_front),
-    Key([mod], "period", lazy.next_screen(), desc="Move focus to next monitor"),
+    Key(
+        [mod], "period", lazy.next_screen(), desc="Move focus to next monitor"
+    ),
     # start specific apps
     Key([mod], "q", lazy.spawn("firefox")),
     Key([mod], "Return", lazy.spawn("st")),
     # Change the volume if your keyboard has special volume keys.
-    Key([mod], "space", lazy.spawn("rofi -show")),
+    Key(
+        [mod],
+        "space",
+        lazy.spawn(
+            "rofi -theme-str 'element-icon { size: 2ch;}' -terminal st -show"
+        ),
+    ),
+    Key([mod], "s", lazy.spawn("rofi -terminal st -show ssh")),
     Key([], "XF86AudioRaiseVolume", lazy.spawn("amixer -q  set Master 2dB+")),
     Key([], "XF86AudioLowerVolume", lazy.spawn("amixer -q  set Master 2dB-")),
-    Key([], "XF86AudioMute", lazy.spawn("amixer -q -D pulse sset Master toggle")),
+    Key(
+        [],
+        "XF86AudioMute",
+        lazy.spawn("amixer -q -D pulse sset Master toggle"),
+    ),
     Key([], "XF86MonBrightnessUp", lazy.spawn("brightnessctl s 5%+")),
     Key([], "XF86MonBrightnessDown", lazy.spawn("brightnessctl s 5%-")),
     # Also allow changing volume the old fashioned way.
@@ -330,19 +372,22 @@ keys = [
         ["shift"],
         "Print",
         lazy.spawn(
-            """bash -c "maim -d 1 -s | xclip -selection clipboard -t image/png" """
+            'bash -c "maim -d 1 -s | xclip -selection clipboard -t image/png"'
         ),
     ),
     Key(
         [],
         "Print",
-        lazy.spawn("""bash -c "maim | xclip -selection clipboard -t image/png" """),
+        lazy.spawn(
+            """bash -c "maim | xclip -selection clipboard -t image/png" """
+        ),
     ),
     Key(
         ["control"],
         "Print",
         lazy.spawn(
-            """bash -c "maim -B -i $(xdotool getactivewindow) | xclip -selection clipboard -t image/png" """
+            'bash -c "maim -B -i $(xdotool getactivewindow) | '
+            + "xclip -selection clipboard -t image/png"
         ),
     ),
 ]
@@ -355,7 +400,10 @@ mouse = [
         start=lazy.window.get_position(),
     ),
     Drag(
-        [mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()
+        [mod],
+        "Button3",
+        lazy.window.set_size_floating(),
+        start=lazy.window.get_size(),
     ),
     Click([mod], "Button2", lazy.window.bring_to_front()),
 ]
@@ -366,18 +414,42 @@ def get_groups():
     g = []
     for counter, group in enumerate(groups["groups"], 1):
         g.append(Group(group["name"], label=group["icon"]))
-        keys.append(Key([mod], str(counter), lazy.group[group["name"]].toscreen()))
         keys.append(
-            Key([mod, "shift"], str(counter), lazy.window.togroup(group["name"]))
+            Key([mod], str(counter), lazy.group[group["name"]].toscreen())
         )
+        keys.append(
+            Key(
+                [mod, "shift"],
+                str(counter),
+                lazy.window.togroup(group["name"]),
+            )
+        )
+    g.append(
+        ScratchPad(
+            "scratchpad",
+            [DropDown("term", "st", opacity=1, height=0.55, width=0.80)],
+        )
+    )
+    keys.extend(
+        [
+            # Scratchpad
+            # toggle visibiliy of above defined DropDown named "term"
+            Key([], "F12", lazy.group["scratchpad"].dropdown_toggle("term")),
+            Key(
+                [], "F11", lazy.group["scratchpad"].dropdown_toggle("qshell")
+            ),
+        ]
+    )
     return g
 
 
 groups = get_groups()
 
-border = dict(border_width=6, margin=10, single_margin=200, border_focus=accent_left)
+border = dict(
+    border_width=6, margin=10, single_margin=200, border_focus=accent_left
+)
 
-layouts = [layout.MonadTall(**border)]
+layouts = [layout.MonadTall(**border), layout.Columns(**border)]
 
 main = None
 follow_mouse_focus = False

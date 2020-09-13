@@ -31,4 +31,3 @@ It uses a Gruvbox colorscheme but I plan to make it configurable
 * make it easier to add widgets to the panel without having to care about
   glyphs and colors all the time
 * lock screen
-
